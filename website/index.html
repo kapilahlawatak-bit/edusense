@@ -290,7 +290,7 @@ async function api(path) {
 }
 
 // ---------- home ----------
-async function loadHome() {
+async function loadHome(retry = 0) {
   try {
     const s = await api('/stats');
     document.getElementById('api-warning').style.display = 'none';
@@ -301,12 +301,12 @@ async function loadHome() {
       <div class="stat"><div class="num">${s.distractor_errors.toLocaleString()}</div><div class="label">Misconception tags</div></div>
       <div class="stat green"><div class="num">${s.rules.length}</div><div class="label">Topics &amp; rule families</div></div>
       <div class="stat amber"><div class="num">${fine}</div><div class="label">Distinct error patterns</div></div>`;
-    // populate topic selects
     const opts = s.rules.map(r => `<option value="${r.rule_type}">${r.rule_type} (${r.n})</option>`).join('');
     document.getElementById('practice-topic').innerHTML = '<option value="">All topics</option>' + opts;
     document.getElementById('bank-topic').innerHTML = '<option value="">All topics</option>' + opts;
   } catch (e) {
     document.getElementById('api-warning').style.display = 'block';
+    if (retry < 5) setTimeout(() => loadHome(retry + 1), 2000);
   }
 }
 
