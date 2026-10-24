@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduSense — CBSE Maths & Reasoning Engine</title>
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --card: #ffffff;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --accent: #2563eb;
+    --accent-soft: #eff6ff;
+    --green: #16a34a;
+    --green-soft: #f0fdf4;
+    --red: #dc2626;
+    --red-soft: #fef2f2;
+    --amber: #d97706;
+    --amber-soft: #fffbeb;
+    --border: #e2e8f0;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(15,23,42,.06), 0 1px 2px rgba(15,23,42,.04);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+         background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
+  a { color: var(--accent); text-decoration: none; }
+
+  /* Layout */
+  .app { min-height: 100vh; display: flex; flex-direction: column; }
+  .topbar { background: var(--card); border-bottom: 1px solid var(--border);
+            padding: 0 24px; height: 60px; display: flex; align-items: center;
+            justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; }
+  .brand .logo { width: 30px; height: 30px; border-radius: 7px; background: linear-gradient(135deg,#2563eb,#1d4ed8);
+                 display: grid; place-items: center; color: #fff; font-size: 15px; font-weight: 800; }
+  .nav { display: flex; gap: 4px; }
+  .nav a { padding: 8px 14px; border-radius: 7px; color: var(--muted); font-size: 14px; font-weight: 500; }
+  .nav a:hover { background: var(--bg); color: var(--ink); }
+  .nav a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .main { flex: 1; max-width: 1080px; width: 100%; margin: 0 auto; padding: 28px 24px 60px; }
+  .footer { border-top: 1px solid var(--border); padding: 18px 24px; text-align: center;
+            color: var(--muted); font-size: 13px; background: var(--card); }
+
+  /* Views */
+  .view { display: none; }
+  .view.active { display: block; animation: fade .2s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* Headings */
+  h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; }
+  h2 { font-size: 18px; font-weight: 650; margin-bottom: 12px; }
+  .sub { color: var(--muted); font-size: 14px; margin-bottom: 22px; }
+  .section { margin-bottom: 32px; }
+
+  /* Cards */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+          padding: 20px; box-shadow: var(--shadow); }
+  .grid { display: grid; gap: 16px; }
+  .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 800px) { .grid.cols-3, .grid.cols-4 { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 560px) { .grid.cols-2, .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr; } }
+
+  /* Stat tiles */
+  .stat { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+          padding: 18px 20px; box-shadow: var(--shadow); }
+  .stat .num { font-size: 30px; font-weight: 750; letter-spacing: -0.02em; }
+  .stat .label { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .stat.accent .num { color: var(--accent); }
+  .stat.green .num { color: var(--green); }
+  .stat.amber .num { color: var(--amber); }
+
+  /* Hero */
+  .hero { background: linear-gradient(135deg,#1e3a8a,#2563eb); color: #fff; border-radius: 14px;
+          padding: 40px 36px; margin-bottom: 28px; }
+  .hero h1 { color: #fff; font-size: 30px; margin-bottom: 10px; }
+  .hero p { color: #dbeafe; font-size: 15px; max-width: 640px; line-height: 1.55; }
+  .hero .actions { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .hero .btn { background: #fff; color: var(--accent); }
+  .hero .btn.ghost { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.25); }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+         padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600;
+         background: var(--accent); color: #fff; border: none; cursor: pointer; }
+  .btn:hover { background: #1d4ed8; }
+  .btn.ghost { background: var(--card); color: var(--ink); border: 1px solid var(--border); }
+  .btn.ghost:hover { background: var(--bg); }
+  .btn.green { background: var(--green); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn.sm { padding: 7px 12px; font-size: 13px; }
+
+  /* Question card */
+  .q-stem { font-size: 17px; line-height: 1.5; margin-bottom: 18px; font-weight: 500; }
+  .q-topic { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase;
+             letter-spacing: .03em; color: var(--accent); background: var(--accent-soft);
+             padding: 3px 9px; border-radius: 20px; margin-bottom: 12px; }
+  .opts { display: flex; flex-direction: column; gap: 9px; }
+  .opt { display: flex; align-items: center; gap: 12px; padding: 13px 15px; border: 1.5px solid var(--border);
+         border-radius: 9px; cursor: pointer; font-size: 15px; transition: all .12s; background: var(--card); }
+  .opt:hover { border-color: var(--accent); }
+  .opt .letter { width: 28px; height: 28px; border-radius: 6px; background: var(--bg); display: grid;
+                 place-items: center; font-weight: 700; font-size: 13px; color: var(--muted); flex-shrink: 0; }
+  .opt.correct { border-color: var(--green); background: var(--green-soft); }
+  .opt.correct .letter { background: var(--green); color: #fff; }
+  .opt.wrong { border-color: var(--red); background: var(--red-soft); }
+  .opt.wrong .letter { background: var(--red); color: #fff; }
+  .opt.locked { cursor: default; }
+  .opt.locked:hover { border-color: var(--border); }
+
+  .feedback { margin-top: 16px; padding: 13px 15px; border-radius: 9px; font-size: 14px; display: none; line-height: 1.5; }
+  .feedback.show { display: block; }
+  .feedback.ok { background: var(--green-soft); color: #14532d; border: 1px solid #bbf7d0; }
+  .feedback.no { background: var(--red-soft); color: #7f1d1d; border: 1px solid #fecaca; }
+  .feedback .mis { font-weight: 700; }
+  .qbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .qcount { color: var(--muted); font-size: 13px; font-weight: 600; }
+  .score-pill { background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 13px;
+                padding: 4px 12px; border-radius: 20px; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase;
+       letter-spacing: .03em; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  td { padding: 11px 12px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg); }
+
+  /* Progress bars */
+  .pbar { height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; min-width: 80px; }
+  .pbar > span { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+  .pbar.green > span { background: var(--green); }
+  .pbar.amber > span { background: var(--amber); }
+  .pbar.red > span { background: var(--red); }
+
+  /* Pills / badges */
+  .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px;
+           letter-spacing: .02em; }
+  .badge.red { background: var(--red-soft); color: var(--red); }
+  .badge.amber { background: var(--amber-soft); color: var(--amber); }
+  .badge.green { background: var(--green-soft); color: var(--green); }
+  .badge.blue { background: var(--accent-soft); color: var(--accent); }
+
+  .mono { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12.5px; }
+  .muted { color: var(--muted); }
+  .empty { text-align: center; color: var(--muted); padding: 40px 20px; font-size: 14px; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .select { padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px;
+            background: var(--card); cursor: pointer; min-width: 180px; }
+  .loading { text-align: center; color: var(--muted); padding: 40px; }
+  .err-banner { background: var(--amber-soft); color: #78350f; border: 1px solid #fde68a;
+                padding: 12px 16px; border-radius: 9px; font-size: 13px; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand"><div class="logo">E</div> EduSense</div>
+    <nav class="nav">
+      <a href="#" data-view="home" class="active">Home</a>
+      <a href="#" data-view="practice">Practice</a>
+      <a href="#" data-view="progress">My Progress</a>
+      <a href="#" data-view="teacher">Teacher</a>
+      <a href="#" data-view="bank">Question Bank</a>
+    </nav>
+  </div>
+
+  <div class="main">
+    <div id="api-warning" class="err-banner" style="display:none">
+      API not reachable at <span class="mono">http://127.0.0.1:8000</span>.
+      Start it with <span class="mono">python -m uvicorn api:app --reload</span> then refresh.
+    </div>
+
+    <!-- HOME -->
+    <section class="view active" id="view-home">
+      <div class="hero">
+        <h1>Diagnose the mistake, not just the mark.</h1>
+        <p>Every question carries a misconception tag on each wrong option — so a student learns
+           <em>why</em> they got it wrong, and a teacher sees which errors are shared across the whole batch.</p>
+        <div class="actions">
+          <a class="btn" href="#" data-view="practice">Start practising</a>
+          <a class="btn ghost" href="#" data-view="teacher">Teacher dashboard</a>
+        </div>
+      </div>
+      <div class="section">
+        <h2>Content</h2>
+        <div class="grid cols-4" id="home-stats"></div>
+      </div>
+      <div class="section">
+        <h2>How it works</h2>
+        <div class="grid cols-3">
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:6px;">1. Verified content</h3>
+            <p class="muted" style="font-size:13.5px;line-height:1.55">Every maths answer is re-derived by the engine before it enters the bank. Across thousands of items, zero wrong keys have shipped.</p>
+          </div>
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:6px;">2. Tagged distractors</h3>
+            <p class="muted" style="font-size:13.5px;line-height:1.55">Each wrong option is labelled with the specific mistake it represents — a sign error, an off-by-one, a reversed generation.</p>
+          </div>
+          <div class="card">
+            <h3 style="font-size:15px;margin-bottom:6px;">3. Actionable feedback</h3>
+            <p class="muted" style="font-size:13.5px;line-height:1.55">Students get a diagnosis and a fix. Teachers get a "who needs me this week" list with a re-teaching script for each.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRACTICE -->
+    <section class="view" id="view-practice">
+      <h1>Practice</h1>
+      <p class="sub">Answer, see the specific mistake, learn the fix.</p>
+      <div class="row" style="margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+        <select class="select" id="practice-topic">
+          <option value="">All topics</option>
+        </select>
+        <button class="btn" id="practice-start">New set of 10</button>
+      </div>
+      <div id="practice-area"></div>
+    </section>
+
+    <!-- PROGRESS -->
+    <section class="view" id="view-progress">
+      <h1>My Progress</h1>
+      <p class="sub">Mastery per topic across all your attempts.</p>
+      <div class="grid cols-2">
+        <div class="card"><h2>Topic mastery</h2><div id="progress-list"><div class="loading">Loading…</div></div></div>
+        <div class="card"><h2>My error patterns</h2><div id="progress-errors"><div class="loading">Loading…</div></div></div>
+      </div>
+    </section>
+
+    <!-- TEACHER -->
+    <section class="view" id="view-teacher">
+      <h1>Teacher Dashboard</h1>
+      <p class="sub">Which students need attention, and exactly what to reteach.</p>
+      <div class="section">
+        <h2>Needs attention this week</h2>
+        <div class="card" id="teacher-attention"><div class="loading">Loading…</div></div>
+      </div>
+      <div class="section">
+        <h2>What to reteach (batch level)</h2>
+        <div class="card" id="teacher-reteach"><div class="loading">Loading…</div></div>
+      </div>
+    </section>
+
+    <!-- BANK -->
+    <section class="view" id="view-bank">
+      <h1>Question Bank</h1>
+      <p class="sub">Browse the verified, misconception-tagged content.</p>
+      <div class="row" style="margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+        <select class="select" id="bank-topic"><option value="">All topics</option></select>
+        <span class="muted" id="bank-count" style="font-size:13px;"></span>
+      </div>
+      <div class="card" id="bank-list"><div class="loading">Loading…</div></div>
+  <div style="text-align:center;margin-top:14px;">
+    <button class="btn ghost sm" id="bank-more" style="display:none;">Load more</button>
+  </div>
+    </section>
+  </div>
+
+  <div class="footer">EduSense · CBSE Maths &amp; Reasoning Engine · every answer verified, every distractor tagged</div>
+</div>
+
+<script>
+const API = 'http://127.0.0.1:8000';
+const STUDENT = 1;
+
+// ---------- nav ----------
+document.querySelectorAll('[data-view]').forEach(el => {
+  el.addEventListener('click', e => {
+    e.preventDefault();
+    const v = el.dataset.view;
+    document.querySelectorAll('.view').forEach(s => s.classList.remove('active'));
+    document.getElementById('view-' + v).classList.add('active');
+    document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('active', a.dataset.view === v));
+    if (v === 'progress') loadProgress();
+    if (v === 'teacher') loadTeacher();
+    if (v === 'bank') loadBank();
+    if (v === 'home') loadHome();
+    window.scrollTo(0, 0);
+  });
+});
+
+async function api(path) {
+  const r = await fetch(API + path);
+  if (!r.ok) throw new Error(r.status + ' ' + await r.text());
+  return r.json();
+}
+
+// ---------- home ----------
+async function loadHome() {
+  try {
+    const s = await api('/stats');
+    document.getElementById('api-warning').style.display = 'none';
+    const mis = await api('/teacher/reteach');
+    const fine = mis.filter(m => m.students > 20).length;
+    document.getElementById('home-stats').innerHTML = `
+      <div class="stat accent"><div class="num">${s.items.toLocaleString()}</div><div class="label">Verified items</div></div>
+      <div class="stat"><div class="num">${s.distractor_errors.toLocaleString()}</div><div class="label">Misconception tags</div></div>
+      <div class="stat green"><div class="num">${s.rules.length}</div><div class="label">Topics &amp; rule families</div></div>
+      <div class="stat amber"><div class="num">${fine}</div><div class="label">Distinct error patterns</div></div>`;
+    // populate topic selects
+    const opts = s.rules.map(r => `<option value="${r.rule_type}">${r.rule_type} (${r.n})</option>`).join('');
+    document.getElementById('practice-topic').innerHTML = '<option value="">All topics</option>' + opts;
+    document.getElementById('bank-topic').innerHTML = '<option value="">All topics</option>' + opts;
+  } catch (e) {
+    document.getElementById('api-warning').style.display = 'block';
+  }
+}
+
+// ---------- practice ----------
+let pq = [], pi = 0, pScore = 0, pAnswered = false;
+
+document.getElementById('practice-start').addEventListener('click', async () => {
+  const topic = document.getElementById('practice-topic').value;
+  try {
+    pq = await api(`/items?count=10${topic ? '&rule_type=' + topic : ''}`);
+    pi = 0; pScore = 0;
+    renderQuestion();
+  } catch (e) { document.getElementById('api-warning').style.display = 'block'; }
+});
+
+function renderQuestion() {
+  const area = document.getElementById('practice-area');
+  if (pi >= pq.length) {
+    const pct = Math.round(pScore / pq.length * 100);
+    area.innerHTML = `<div class="card" style="text-align:center;padding:48px;">
+      <div style="font-size:44px;font-weight:750;color:var(--accent);">${pScore}/${pq.length}</div>
+      <div class="muted" style="margin:8px 0 20px;">${pct}% correct · ${pq.length - pScore} to review</div>
+      <button class="btn" onclick="document.getElementById('practice-start').click()">New set</button></div>`;
+    return;
+  }
+  const q = pq[pi];
+  pAnswered = false;
+  area.innerHTML = `
+    <div class="card">
+      <div class="qbar"><span class="qcount">Question ${pi + 1} of ${pq.length}</span>
+        <span class="score-pill">Score ${pScore}</span></div>
+      <div class="q-topic">${q.rule_type}</div>
+      <div class="q-stem">${esc(q.stem)}</div>
+      <div class="opts">${['A','B','C','D'].map(l =>
+        q['option_' + l.toLowerCase()] !== '' && q['option_' + l.toLowerCase()] != null ?
+        `<div class="opt" data-l="${l}"><div class="letter">${l}</div><div>${esc(q['option_' + l.toLowerCase()])}</div></div>` : ''
+      ).join('')}</div>
+      <div class="feedback" id="fb"></div>
+    </div>
+    <div class="row" style="margin-top:14px;">
+      <span></span><button class="btn ghost sm" id="next-q" disabled>Next →</button>
+    </div>`;
+  area.querySelectorAll('.opt').forEach(o =>
+    o.addEventListener('click', () => answer(o, q)));
+}
+
+async function answer(el, q) {
+  if (pAnswered) return;
+  pAnswered = true;
+  const letter = el.dataset.l;
+  const correct = letter === q.correct_option;
+  if (correct) pScore++;
+  try {
+    await fetch(API + '/attempts', { method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ student_id: STUDENT, exam_id: 1,
+        items: [{ item_id: q.id, selected_option: letter, time_spent_seconds: 30 }] }) });
+  } catch (e) {}
+  document.querySelectorAll('.opt').forEach(o => {
+    o.classList.add('locked');
+    if (o.dataset.l === q.correct_option) o.classList.add('correct');
+    else if (o.dataset.l === letter) o.classList.add('wrong');
+  });
+  const fb = document.getElementById('fb');
+  if (correct) {
+    fb.className = 'feedback show ok'; fb.innerHTML = '<b>Correct.</b> Nice work.';
+  } else {
+    let detail = '';
+    try {
+      const rows = await api(`/qmatrix/${STUDENT}`);
+      const m = rows.find(r => r.description);
+      if (m) detail = `<div style="margin-top:5px;"><span class="mis">${esc(m.error_type)}</span> — ${esc(m.description)}</div>`;
+    } catch (e) {}
+    fb.className = 'feedback show no';
+    fb.innerHTML = `<b>Not quite.</b> Correct answer: <b>${q.correct_option}</b>.${detail}`;
+  }
+  document.getElementById('next-q').disabled = false;
+  document.getElementById('next-q').onclick = () => { pi++; renderQuestion(); };
+}
+
+// ---------- progress ----------
+async function loadProgress() {
+  try {
+    const rows = await api(`/student/${STUDENT}/progress`);
+    const el = document.getElementById('progress-list');
+    if (!rows.length) { el.innerHTML = '<div class="empty">No attempts yet. Practise first.</div>'; }
+    else {
+      el.innerHTML = '<table><tr><th>Topic</th><th>Mastery</th><th></th></tr>' + rows.map(r => {
+        const pct = r.total ? Math.round(r.correct / r.total * 100) : 0;
+        const cls = pct >= 75 ? 'green' : pct >= 50 ? 'amber' : 'red';
+        return `<tr><td>${r.rule_type}</td><td>${r.correct}/${r.total} · ${pct}%</td>
+                <td style="width:38%"><div class="pbar ${cls}"><span style="width:${pct}%"></span></div></td></tr>`;
+      }).join('') + '</table>';
+    }
+    const errs = await api(`/qmatrix/${STUDENT}`);
+    const el2 = document.getElementById('progress-errors');
+    if (!errs.length) el2.innerHTML = '<div class="empty">No errors recorded yet.</div>';
+    else el2.innerHTML = errs.map(e =>
+      `<div style="padding:9px 0;border-bottom:1px solid var(--border);">
+         <div style="display:flex;justify-content:space-between;"><b>${esc(e.error_type)}</b>
+         <span class="badge red">${e.n_errors}×</span></div>
+         <div class="muted" style="font-size:12.5px;margin-top:2px;">${esc(e.description)}</div></div>`).join('');
+  } catch (e) { document.getElementById('api-warning').style.display = 'block'; }
+}
+
+// ---------- teacher ----------
+async function loadTeacher() {
+  try {
+    const att = await api('/teacher/attention?top=8');
+    const el = document.getElementById('teacher-attention');
+    if (!att.length) { el.innerHTML = '<div class="empty">No attempts recorded yet.</div>'; }
+    else {
+      el.innerHTML = '<table><tr><th>Student</th><th>Errors</th><th>Priority</th></tr>' + att.map((a, i) => {
+        const lvl = i < 2 ? ['High', 'red'] : i < 5 ? ['Medium', 'amber'] : ['Low', 'green'];
+        return `<tr><td>Student ${a.student_id}</td><td><b>${a.total_errors}</b></td>
+                <td><span class="badge ${lvl[1]}">${lvl[0]}</span></td></tr>`;
+      }).join('') + '</table>';
+    }
+    const re = await api('/teacher/reteach');
+    const el2 = document.getElementById('teacher-reteach');
+    el2.innerHTML = '<table><tr><th>Misconception</th><th>Students</th><th>Errors</th></tr>' + re.map(r =>
+      `<tr><td><b>${esc(r.error_type)}</b><div class="muted" style="font-size:12.5px;">${esc(r.description)}</div></td>
+       <td><b>${r.students}</b></td><td>${r.errors}</td></tr>`).join('') + '</table>';
+  } catch (e) { document.getElementById('api-warning').style.display = 'block'; }
+}
+
+// ---------- bank ----------
+document.getElementById('bank-topic').addEventListener('change', () => { bankItems = []; loadBank(); });
+let bankItems = [];
+async function loadBank() {
+  const topic = document.getElementById('bank-topic').value;
+  const append = bankItems.length > 0;
+  try {
+    const items = await api(`/items?count=25${topic ? '&rule_type=' + topic : ''}`);
+    bankItems = append ? bankItems.concat(items) : items;
+    const total = (await api('/stats')).items;
+    document.getElementById('bank-count').textContent =
+      `${bankItems.length} of ${total} items shown`;
+    const el = document.getElementById('bank-list');
+    const html = bankItems.map(q => `
+      <div style="padding:14px 0;border-bottom:1px solid var(--border);">
+        <div class="q-topic">${q.rule_type}</div>
+        <div style="font-size:14.5px;line-height:1.45;margin:4px 0 8px;">${esc(q.stem)}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${['A','B','C','D'].map(l => q['option_' + l.toLowerCase()] ?
+            `<span class="badge ${l === q.correct_option ? 'green' : ''}"
+              style="${l === q.correct_option ? '' : 'background:var(--bg);color:var(--muted);'}">
+              ${l}: ${esc(q['option_' + l.toLowerCase()])}</span>` : '').join('')}
+        </div>
+      </div>`).join('');
+    el.innerHTML = html;
+    const moreBtn = document.getElementById('bank-more');
+    moreBtn.style.display = bankItems.length < total ? 'inline-flex' : 'none';
+    moreBtn.onclick = () => loadBank();
+  } catch (e) { document.getElementById('api-warning').style.display = 'block'; }
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+
+loadHome();
+</script>
+</body>
+</html>
